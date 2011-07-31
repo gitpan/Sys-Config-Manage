@@ -1,0 +1,13 @@
+Changes
+MANIFEST
+Makefile.PL
+README
+lib/Sys/Config/Manage.pm
+t/00-load.t
+t/manifest.t
+t/pod-coverage.t
+t/pod.t
+bin/scm-add
+bin/scm-down
+bin/scm-list
+bin/scm-up
