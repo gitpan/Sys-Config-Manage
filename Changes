@@ -1,0 +1,8 @@
+Revision history for Sys-Config-Manage
+
+0.0.1	2011-08-04/14:20
+		-Correct various issues with listing tracked files.
+		-Minor POD changes.
+
+0.0.0	2011-07-31/09:30
+		-Initial release.

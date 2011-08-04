@@ -16,11 +16,11 @@ Sys::Config::Manage - Manages system configuration information.
 
 =head1 VERSION
 
-Version 0.0.0
+Version 0.0.1
 
 =cut
 
-our $VERSION = '0.0.0';
+our $VERSION = '0.0.1';
 
 =head1 SYNOPSIS
 
@@ -158,6 +158,18 @@ Two arguments are taken. The first is the file to added
 and the second is the configuration directory to use. If
 no configuration directory is specified, one will
 automatically selected.
+
+    #add it with a automatically selected config dir
+    $foo->add($file);
+    if($foo->error){
+        warn('error:'.$foo->error.': '.$foo->errorString);
+    }
+    
+    #add it with a automatically specified config dir
+    $foo->add($file, $configDir);
+    if($foo->error){
+        warn('error:'.$foo->error.': '.$foo->errorString);
+    }
 
 =cut
 
@@ -710,16 +722,34 @@ sub listConfigFiles{
 			   if ( $_ eq ".svn" ) {
 				   return;
 			   }
+			   if($File::Find::dir =~ /\.svn$/){
+				   return;
+			   }
+			   if($File::Find::dir =~ /\.svn\//){
+				   return;
+			   }
 
 			   #don't match .SysConfigManage stuff
 			   if ( $_ eq ".SysConfigManage" ) {
 				   return;
 			   }
+			   if($File::Find::dir =~ /\.SysConfigManage$/){
+                   return;
+               }
+               if($File::Find::dir =~ /\.SysConfigManage\//){
+                   return;
+               }
 
 			   #don't match .git stuff
 			   if ( $_ eq ".git" ) {
 				   return;
 			   }
+               if($File::Find::dir =~ /\.git$/){
+                   return;
+               }
+               if($File::Find::dir =~ /\.git\//){
+                   return;
+               }
 
 			   #only list files
 			   if ( ! -f $_ ) {
@@ -858,6 +888,80 @@ sub selectConfigDir{
     }
 
 	return undef;
+}
+
+=head2 setAddCommand
+
+This changes the add command.
+
+If nothing is specified, it will be set to undef, meaning
+nothing will be done to add it.
+
+    #sets nothing to be added
+    $foo->setAddMethod();
+    if($foo->error){
+        warn('error:'.$foo->error.': '.$foo->errorString);
+    }
+
+    #sets it to 'svn add --parents %%%file%%%'
+    $foo->setAddMethod('svn add --parents %%%file%%%');
+    if($foo->error){
+        warn('error:'.$foo->error.': '.$foo->errorString);
+    }
+
+=cut
+
+sub setAddCommand{
+    my $self=$_[0];
+	my $command=$_[1];
+    my $method='setAddCommand';
+
+    #blank any previous errors
+    if (!$self->errorblank) {
+        warn($self->{module}.' '.$method.': Failed to blank the previous error');
+        return undef;
+    }
+
+	$self->{addCommand}=$command;
+
+	return 1;
+}
+
+=head2 setAutoCreateConfigDir
+
+This changes the add command.
+
+If nothing is specified, it will be set to undef, meaning
+nothing will be done to add it.
+
+    #sets nothing to be added
+    $foo->setAddMethod();
+    if($foo->error){
+        warn('error:'.$foo->error.': '.$foo->errorString);
+    }
+
+    #sets it to 'svn add --parents %%%file%%%'
+    $foo->setAddMethod('svn add --parents %%%file%%%');
+    if($foo->error){
+        warn('error:'.$foo->error.': '.$foo->errorString);
+    }
+
+=cut
+
+sub setAutoCreateConfigDir{
+    my $self=$_[0];
+    my $autocreate=$_[1];
+    my $method='setAutoCreateConfigDir';
+	
+    #blank any pre1;3Avious errors
+    if (!$self->errorblank) {
+        warn($self->{module}.' '.$method.': Failed to blank the previous error');
+        return undef;
+    }
+	
+    $self->{autoCreateConfigDir}=$autocreate;
+	
+    return 1;
 }
 
 =head2 setSelectionMethod
@@ -1152,7 +1256,7 @@ Returns the error string if there is one. If there is not,
 it will return ''.
 
     if($foo->error){
-                warn('error: '.$foo->error.":".$foo->errorString);
+        warn('error: '.$foo->error.":".$foo->errorString);
     }
 
 =cut
@@ -1160,7 +1264,6 @@ it will return ''.
 sub errorString{
     return $_[0]->{errorString};
 }
-
 
 =head1 ERROR CODES
 
@@ -1271,8 +1374,11 @@ ran will have any instance of '%%%file%%%' replaced with a escaped file name.
 
 Lets say the base directory is '/root/configs/' and the configuration
 directory is 'foo.bar', with a config file of '/etc/rc.conf', and a add command
-of 'svn add %%%file%%%', then the executed command will be
-'svn add /root/configs/foo.bar/etc/rc.conf'.
+of 'svn add --parents %%%file%%%', then the executed command will be
+'svn add --parents /root/configs/foo.bar/etc/rc.conf'.
+
+To help integrate with subversion and git, directories matching /^.git$/ and
+/^.svn$/ are ignored.
 
 =head1 AUTHOR
 
