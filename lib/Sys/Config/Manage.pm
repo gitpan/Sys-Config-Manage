@@ -17,11 +17,11 @@ Sys::Config::Manage - Manages system configuration information.
 
 =head1 VERSION
 
-Version 0.1.0
+Version 0.1.1
 
 =cut
 
-our $VERSION = '0.1.0';
+our $VERSION = '0.1.1';
 
 =head1 SYNOPSIS
 
@@ -907,7 +907,7 @@ sub selectConfigDir{
 	my $selectionMethod=$self->getSelectionMethod;
 
 	if( $selectionMethod eq 'hostname' ){
-		return hostname;
+		return lc(hostname);
 	}
 
     if ( $selectionMethod eq 'regexp' ){
@@ -1342,7 +1342,8 @@ next field is a regular expression. If the regular expression matches the
 hostname, the configuration directory in the first field is used. The first
 match is used. Any line starting with a "#" is a comment.
 
-The hostname method uses the hostname for the configuration directory.
+The hostname method uses the hostname for the configuration directory. It also
+converts the hostname to lowercase.
 
 Any where in the path, the regexp /\.SysConfigManage/ maynot be found. This
 is a reserved directory that will be used some time in the future.

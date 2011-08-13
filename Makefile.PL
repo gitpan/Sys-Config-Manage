@@ -21,6 +21,7 @@ WriteMakefile(
 		'File::Path'=>0,
 		'Cwd'=>0,
 		'String::ShellQuote'=>0,
+		'Error::Helper'=>0,
 	},
 	dist                => { COMPRESS => 'gzip -9f', SUFFIX => 'gz', },
 	clean               => { FILES => 'Sys-Config-Manage-*' },

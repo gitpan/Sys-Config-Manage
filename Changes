@@ -1,5 +1,9 @@
 Revision history for Sys-Config-Manage
 
+0.1.1	 2011-08-13/11:30
+		 -Convert the hostname to lowercase.
+		 -Add 'Error::Helper' to the required module list.
+
 0.1.0	 2011-08-13/09:20
 		 -Add the scripts below.
 		 	  bin/scm-perms-get
