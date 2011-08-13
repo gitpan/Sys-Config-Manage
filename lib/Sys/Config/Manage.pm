@@ -9,6 +9,7 @@ use File::Basename;
 use File::Path 'make_path';
 use Cwd 'abs_path';
 use String::ShellQuote;
+use base 'Error::Helper';
 
 =head1 NAME
 
@@ -16,11 +17,11 @@ Sys::Config::Manage - Manages system configuration information.
 
 =head1 VERSION
 
-Version 0.0.1
+Version 0.1.0
 
 =cut
 
-our $VERSION = '0.0.1';
+our $VERSION = '0.1.0';
 
 =head1 SYNOPSIS
 
@@ -100,17 +101,20 @@ sub new{
 		$self->{perror}=1;
 		$self->{error}=1;
 		$self->{errorString}='No base directory specified';
-		warn($self->{module}.' '.$method.':'.$self->error.': '.$self->errorString);
+		$self->warn;
 		return $self;
 	}
 	$self->{baseDir}=$args{baseDir};
+
+	#clean it up
+	$self->{baseDir} =~ s/\/\/*/\//g;
 
 	#makes sure the base directory
 	if (! -d $self->{baseDir}) {
 		$self->{perror}=1;
 		$self->{error}=4;
 		$self->{errorString}='"'.$self->{baseDir}.'" does not exist or is not a directory';
-		warn($self->{module}.' '.$method.':'.$self->error.': '.$self->errorString);
+		$self->warn;
 		return $self;
 	}
 
@@ -138,7 +142,7 @@ sub new{
 			$self->{perror}=1;
 			$self->{error}=2;
 			$self->{errorString}='"'.$args{selectionMethod}.'" is not a valid selection method';
-			warn($self->{module}.' '.$method.':'.$self->error.': '.$self->errorString);
+			$self->warn;
 			return $self;
 		}
 		$self->{selectionMethod}=$args{selectionMethod};
@@ -181,7 +185,6 @@ sub add{
 
 	#blank any previous errors
 	if (!$self->errorblank) {
-		warn($self->{module}.' '.$method.': Failed to blank the previous error');
 		return undef;
 	}
 
@@ -189,7 +192,7 @@ sub add{
 	if (!defined($file)) {
 		$self->{error}=7;
 		$self->{errorString}='No file specified';
-		warn($self->{module}.' '.$method.':'.$self->error.': '.$self->errorString);
+		$self->warn;
 		return undef;
 	}
 
@@ -197,7 +200,7 @@ sub add{
 	if (! -f $file ) {
 		$self->{error}=8;
         $self->{errorString}='"'.$file.'" does not exist or is not a file';
-        warn($self->{module}.' '.$method.':'.$self->error.': '.$self->errorString);
+		$self->warn;
         return undef;
 	}
 
@@ -219,7 +222,7 @@ sub add{
 	if (defined( $valid )) {
 		$self->{error}=6;
 		$self->{errorString}='The configuration directory name '.$valid;
-		warn($self->{module}.' '.$method.':'.$self->error.': '.$self->errorString);
+		$self->warn;
 		return undef;
 	}
 
@@ -227,7 +230,7 @@ sub add{
 	if ( -f $self->{baseDir}.'/'.$configDir ) {
 		$self->{error}=13;
 		$self->{errorString}='"'.$self->{baseDir}.'/'.$configDir.'" is a file and thusly can not be used as a configuration directory';
-		warn($self->{modules}.' '.$method.':'.$self->error.': '.$self->errorString);
+		$self->warn;
 		return undef;
 	}
 
@@ -237,13 +240,13 @@ sub add{
 			if (! mkdir( $self->{baseDir}.'/'.$configDir ) ) {
 				$self->{error}=14;
 				$self->{errorString}='"'.$self->{baseDir}.'/'.$configDir.'" could not be created';
-				warn($self->{module}.' '.$method.':'.$self->error.': '.$self->errorString);
+				$self->warn;
 				return undef;
 			}
 		}else {
 			$self->{error}=15;
 			$self->{errorString}='"'.$self->{baseDir}.'/'.$configDir.'" could not be created as autoCreateConfigDir is set to false';
-			warn($self->{module}.' '.$method.':'.$self->error.': '.$self->errorString);
+			$self->warn;
 			return undef;
 		}
 	}
@@ -253,19 +256,19 @@ sub add{
 
 	#makes the new path
 	my $newfile=$self->{baseDir}.'/'.$configDir.'/'.$file;
-	$newfile=~s/\/\//\//g;
+	$newfile=~s/\/\/*/\//g;
 
 	#figures out what the new directory will be
 	my ($name,$path,$suffix) = fileparse( $file );
 	my $newpath=$self->{baseDir}.'/'.$configDir.'/'.$path;
-	$newfile=~s/\/\//\//g;
+	$newfile=~s/\/\/*/\//g;
 
 	#make sure the new path does not exist as a file
 	#while this may look stupid, it makes sure i
 	if ( -f $newpath ) {
 		$self->{error}=9;
 		$self->{errorString}='"'.$newpath.'" is a file, so unable to create the directory';
-		warn($self->{module}.' '.$method.':'.$self->error.': '.$self->errorString);
+		$self->warn;
         return undef;
 	}
 
@@ -274,7 +277,7 @@ sub add{
 		if (! make_path($newpath) ) {
 			$self->{error}=10;
 			$self->{errorString}='The path "'.$newpath.'" could not be created';
-			warn($self->{module}.' '.$method.':'.$self->error.': '.$self->errorString);
+			$self->warn;
 			return undef;
 		}
 	}
@@ -283,7 +286,7 @@ sub add{
 	if (! copy($file, $newfile) ) {
 		$self->{error}=11;
 		$self->{errorString}='Unable to copy "'.$file.'" to "'.$newfile.'"';
-		warn($self->{module}.' '.$method.':'.$self->error.': '.$self->errorString);
+		$self->warn;
 		return undef;
 	}
 
@@ -298,7 +301,7 @@ sub add{
 		if ($exit ne '0') {
 			$self->{error}=12;
 			$self->{errorString}='The add command failed. command="'.$command.'" exit="'.$exit.'"';
-			warn($self->{module}.' '.$method.':'.$self->error.': '.$self->errorString); 
+			$self->warn;
 			return undef;
 		}
 	}
@@ -328,7 +331,6 @@ sub configDirExists{
 
 	#blank any previous errors
 	if (!$self->errorblank) {
-		warn($self->{module}.' '.$method.': Failed to blank the previous error');
 		return undef;
 	}
 
@@ -379,8 +381,7 @@ sub downSync{
 
     #blank any previous errors
     if (!$self->errorblank) {
-	warn($self->{module}.' '.$method.': Failed to blank the previous error');
-	return undef;
+		return undef;
     }
 
     #make sure we have a directory to use
@@ -401,7 +402,7 @@ sub downSync{
     if (defined( $valid )) {
 		$self->{error}=6;
 		$self->{errorString}='The configuration directory name '.$valid;
-		warn($self->{module}.' '.$method.':'.$self->error.': '.$self->errorString);
+		$self->warn;
 		return undef;
     }
 
@@ -409,7 +410,7 @@ sub downSync{
     if ( ! -d $self->{baseDir}.'/'.$configDir ) {
 		$self->{error}=16;
 		$self->{errorString}='The configuration directory, "'.$self->{baseDir}.'/'.$configDir.'", does not exist';
-		warn($self->{module}.' '.$method.':'.$self->error.': '.$self->errorString);
+		$self->warn;
 		return undef;
     }
 
@@ -439,7 +440,7 @@ sub downSync{
 		if( -f $path ){
 			$self->{error}=19;
 			$self->{errorString}='"'.$path.'" should be a directory, but it is a file ';
-			warn($self->{module}.' '.$method.':'.$self->error.': '.$self->errorString);
+			$self->warn;
 			return undef;
 	}
 	
@@ -447,7 +448,7 @@ sub downSync{
 	if (!$matched) {
 	    $self->{error}=18;
 	    $self->{errorString}='"'.$files[$int].'" is not tracked';
-	    warn($self->{module}.' '.$method.':'.$self->error.': '.$self->errorString);
+		$self->warn;
 	    return undef;
 	}
 	
@@ -458,7 +459,7 @@ sub downSync{
     $int=0;
 	while( defined( $files[$int] ) ){
 		my $repofile=$self->{baseDir}.'/'.$configDir.'/'.$files[$int];
-		$repofile=~s/\/\//\//g;
+		$repofile=~s/\/\/*/\//g;
 		
         #figures out what the new directory will be
         my ($name,$path,$suffix) = fileparse( $files[$int] );
@@ -468,7 +469,7 @@ sub downSync{
 			if(!make_path( $path )){
 				$self->{error}=10;
 				$self->{errorString}='"'.$path.'" could not be created as a directory';
-				warn($self->{module}.' '.$method.':'.$self->error.': '.$self->errorString);
+				$self->warn;
 				return undef;
 			}
 		}
@@ -477,7 +478,7 @@ sub downSync{
 		if(! copy($repofile, $files[$int]) ){
 			$self->{error}=19;
 			$self->{errorString}='"'.$files[$int].'" could not be synced';
-			warn($self->{module}.' '.$method.':'.$self->error.': '.$self->errorString);
+			$self->warn;
 			return undef;
 		}
 		
@@ -506,7 +507,6 @@ sub getAddCommand{
 
 	#blank any previous errors
 	if ($self->errorblank) {
-		warn($self->{module}.' '.$method.': Failed to blank the previous error');
 		return undef;
 	}
 
@@ -530,7 +530,6 @@ sub getAutoCreateConfigDir{
 
 	#blank any previous errors
 	if ($self->errorblank) {
-		warn($self->{module}.' '.$method.': Failed to blank the previous error');
 		return undef;
 	}
 
@@ -554,7 +553,6 @@ sub getBaseDir{
 
 	#blank any previous errors
 	if ($self->errorblank) {
-		warn($self->{module}.' '.$method.': Failed to blank the previous error');
 		return undef;
 	}
 
@@ -579,7 +577,6 @@ sub getHostnameFallback{
 
     #blank any previous errors
     if ($self->errorblank) {
-        warn($self->{module}.' '.$method.': Failed to blank the previous error');
         return undef;
     }
 
@@ -603,7 +600,6 @@ sub getSelectionMethod{
 
 	#blank any previous errors
 	if (!$self->errorblank) {
-		warn($self->{module}.' '.$method.': Failed to blank the previous error');
 		return undef;
 	}
 
@@ -627,7 +623,6 @@ sub listConfigDirs{
 
 	#blank any previous errors
 	if (!$self->errorblank) {
-		warn($self->{module}.' '.$method.': Failed to blank the previous error');
 		return undef;
 	}
 
@@ -636,7 +631,7 @@ sub listConfigDirs{
 	if (! opendir( $dh, $self->{baseDir} ) ) {
 		$self->{error}=5;
 		$self->{errorString}='Unable to open "'.$self->{baseDir}.'"';
-		warn($self->{module}.' '.$method.':'.$self->error.': '.$self->errorString);
+		$self->warn;
 		return undef;
 	}
 
@@ -678,7 +673,6 @@ sub listConfigFiles{
 
 	#blank any previous errors
 	if (!$self->errorblank) {
-		warn($self->{module}.' '.$method.': Failed to blank the previous error');
 		return undef;
 	}
 
@@ -700,7 +694,7 @@ sub listConfigFiles{
 	if (defined( $valid )) {
 		$self->{error}=6;
 		$self->{errorString}='The configuration directory name '.$valid;
-		warn($self->{module}.' '.$method.':'.$self->error.': '.$self->errorString);
+		$self->warn;
 		return undef;
 	}
 
@@ -708,7 +702,7 @@ sub listConfigFiles{
 	if ( ! -d $self->{baseDir}.'/'.$configDir ) {
 		$self->{error}=16;
 		$self->{errorString}='The configuration directory, "'.$self->{baseDir}.'/'.$configDir.'", does not exist';
-		warn($self->{module}.' '.$method.':'.$self->error.': '.$self->errorString);
+		$self->warn;
 		return undef;
 	}
 
@@ -770,6 +764,55 @@ sub listConfigFiles{
 	return @found;
 }
 
+=head2 notUnderBase
+
+This makes sure that the a file is not under the base directory.
+
+If it returns true, then the file is not under the base directory.
+
+If it returns false, then it is under the base directory.
+
+    my $returned=$foo->notUnderBase($file);
+    if($foo->error){
+        warn('error:'.$foo->error.': '.$foo->errorString);
+    }
+    if ( ! $returned ){
+        print "The file is under the base directory.\n".
+    }
+
+=cut
+
+sub notUnderBase{
+	my $self=$_[0];
+	my $file=$_[1];
+	my $method='notUnderBase';
+
+	#blank any previous errors
+	if (!$self->errorblank) {
+		return undef;
+	}
+
+	#make sure we have a file specified
+	if( ! defined( $file ) ){
+		$self->{error}=7;
+		$self->{errorString}='No file specified';
+		$self->warn;
+	}
+
+	#clean up the path
+	$file=~s/\/\/*/\//g;
+
+	my $regexp="^".quotemeta($self->{baseDir}."/");
+	$regexp=~s/\/\/*/\//g;
+
+	#if it matches, then it 
+	if( $file =~ /$regexp/ ){
+		return 0;
+	}
+
+	return 1;
+}
+
 =head2 regexpSelectConfigDir
 
 This reads $baseDir.'/.mapping' and returns the selected configuration
@@ -797,7 +840,6 @@ sub regexpSelectConfigDir{
 
 	#blank any previous errors
 	if (!$self->errorblank) {
-		warn($self->{module}.' '.$method.': Failed to blank the previous error');
 		return undef;
 	}
 
@@ -809,7 +851,7 @@ sub regexpSelectConfigDir{
 	if ( -f $self->{baseDir}.'/.mapping' ) {
 		$self->{error}=5;
 		$self->{error}='"'.$self->{baseDir}.'/.mapping" does not exist or is not a file';
-		warn($self->{module}.' '.$method.':'.$self->error.': '.$self->errorString);
+		$self->warn;
 		return undef;
 	}
 
@@ -818,7 +860,7 @@ sub regexpSelectConfigDir{
 	if ( ! open( $dh, '<', $self->{baseDir}.'/.mapping' ) ) {
 		$self->{error}=6;
 		$self->{error}='"'.$self->{baseDir}.'/.mapping" could not be opened';
-		warn($self->{module}.' '.$method.':'.$self->error.': '.$self->errorString);
+		$self->warn;
 		return undef;
 	}
 
@@ -859,7 +901,6 @@ sub selectConfigDir{
 
     #blank any previous errors
     if (!$self->errorblank) {
-        warn($self->{module}.' '.$method.': Failed to blank the previous error');
         return undef;
     }
 
@@ -881,7 +922,7 @@ sub selectConfigDir{
 			}
 			$self->{error}=17;
 			$self->{errorString}='Hostname is disabled and regexp selection did not find any thing';
-			warn($self->{module}.' '.$method.':'.$self->error.': '.$self->errorString);
+			$self->warn;
 			return undef;
 		}
 		return $configDir;
@@ -918,7 +959,6 @@ sub setAddCommand{
 
     #blank any previous errors
     if (!$self->errorblank) {
-        warn($self->{module}.' '.$method.': Failed to blank the previous error');
         return undef;
     }
 
@@ -955,7 +995,6 @@ sub setAutoCreateConfigDir{
 	
     #blank any pre1;3Avious errors
     if (!$self->errorblank) {
-        warn($self->{module}.' '.$method.': Failed to blank the previous error');
         return undef;
     }
 	
@@ -987,7 +1026,6 @@ sub setSelectionMethod{
 
 	#blank any previous errors
 	if (!$self->errorblank) {
-		warn($self->{module}.' '.$method.': Failed to blank the previous error');
 		return undef;
 	}
 
@@ -995,7 +1033,7 @@ sub setSelectionMethod{
 	if (!defined($selectionMethod)) {
 		$self->{error}=3;
 		$self->{errorString}='No selection method specified';
-		warn($self->{module}.' '.$method.':'.$self->error.': '.$self->errorString);
+		$self->warn;
 		return undef;
 	}
 
@@ -1006,7 +1044,7 @@ sub setSelectionMethod{
 		) {
 		$self->{error}=2;
 		$self->{errorString}='"'.$selectionMethod.'" is not a valid selection method';
-		warn($self->{module}.' '.$method.':'.$self->error.': '.$self->errorString);
+		$self->warn;
 		return undef;
 	}
 
@@ -1048,49 +1086,48 @@ sub upSync{
     my $configDir=$_[1];
     my @files;
     if (defined($_[2])) {
-	@files=@{$_[2]};
+		@files=@{$_[2]};
     }
     my $method='downSync';
 
     #blank any previous errors
     if (!$self->errorblank) {
-	warn($self->{module}.' '.$method.': Failed to blank the previous error');
-	return undef;
+		return undef;
     }
 
     #make sure we have a directory to use
     if (!defined($configDir)) {
-	$configDir=$self->selectConfigDir;
-	if ($self->error) {
-	    warn($self->{module}.' '.$method.': Unable to select a config dir');
-	    return undef;
-	}
+		$configDir=$self->selectConfigDir;
+		if ($self->error) {
+			warn($self->{module}.' '.$method.': Unable to select a config dir');
+			return undef;
+		}
     }
 
     #make sure the config directory is valid
     my $valid=$self->validConfigDirName($configDir);
     if ($self->error) {
-	warn($self->{module}.' '.$method.':'.$self->error.': Errored checking if the configuration directory name is valid');
-	return undef;
+		warn($self->{module}.' '.$method.':'.$self->error.': Errored checking if the configuration directory name is valid');
+		return undef;
     }
     if (defined( $valid )) {
-	$self->{error}=6;
-	$self->{errorString}='The configuration directory name '.$valid;
-	warn($self->{module}.' '.$method.':'.$self->error.': '.$self->errorString);
-	return undef;
+		$self->{error}=6;
+		$self->{errorString}='The configuration directory name '.$valid;
+		$self->warn;
+		return undef;
     }
 
     #makes sure it exists
     if ( ! -d $self->{baseDir}.'/'.$configDir ) {
-	$self->{error}=16;
-	$self->{errorString}='The configuration directory, "'.$self->{baseDir}.'/'.$configDir.'", does not exist';
-	warn($self->{module}.' '.$method.':'.$self->error.': '.$self->errorString);
-	return undef;
+		$self->{error}=16;
+		$self->{errorString}='The configuration directory, "'.$self->{baseDir}.'/'.$configDir.'", does not exist';
+		$self->warn;
+		return undef;
     }
 
     #get the files if if none is specified
     if (!defined( $files[0] )) {
-	@files=$self->listConfigFiles($configDir);
+		@files=$self->listConfigFiles($configDir);
     }
 
     #get the files if if none is specified
@@ -1114,7 +1151,7 @@ sub upSync{
 	if( -f $path ){
 	    $self->{error}=19;
 	    $self->{errorString}='"'.$path.'" should be a directory, but it is a file ';
-	    warn($self->{module}.' '.$method.':'.$self->error.': '.$self->errorString);
+		$self->warn;
 	    return undef;
 	}
 	
@@ -1122,7 +1159,7 @@ sub upSync{
 	if (!$matched) {
 	    $self->{error}=18;
 	    $self->{errorString}='"'.$files[$int].'" is not tracked';
-	    warn($self->{module}.' '.$method.':'.$self->error.': '.$self->errorString);
+		$self->warn;
 	    return undef;
 	}
 	
@@ -1133,7 +1170,7 @@ sub upSync{
 	$int=0;
     while( defined( $files[$int] ) ){
 		my $repofile=$self->{baseDir}.'/'.$configDir.'/'.$files[$int];
-		$repofile=~s/\/\//\//g;
+		$repofile=~s/\/\/*/\//g;
 
         #figures out what the new directory will be
         my ($name,$path,$suffix) = fileparse( $files[$int] );
@@ -1142,7 +1179,7 @@ sub upSync{
 		if(! copy($files[$int], $repofile) ){
 			$self->{error}=19;
 			$self->{errorString}='"'.$files[$int].'" could not be synced';
-			warn($self->{module}.' '.$method.':'.$self->error.': '.$self->errorString);
+			$self->warn;
 			return undef;
 		}
 		
@@ -1204,65 +1241,6 @@ sub validConfigDirName{
 	}
 
 	return undef;
-}
-
-=head1 ERROR RELATED METHODS
-
-=head2 error
-
-Returns the current error code and true if there is an error.
-
-If there is no error, undef is returned.
-
-    if($zconf->error){
-                warn('error: '.$foo->error.":".$foo->errorString);
-    }
-
-=cut
-
-sub error{
-    return $_[0]->{error};
-}
-
-=head2 errorblank
-
-This blanks the error storage and is only meant for internal usage.
-
-It does the following.
-
-        $foo->{error}=undef;
-        $foo->{errorString}="";
-
-=cut
-
-#blanks the error flags
-sub errorblank{
-        my $self=$_[0];
-
-		if ($self->{perror}) {
-			warn($self->{module}.' errorblank: A permanent error is set');
-			return undef;
-		}
-
-        $self->{error}=undef;
-        $self->{errorString}="";
-
-        return 1;
-};
-
-=head2 errorString
-
-Returns the error string if there is one. If there is not,
-it will return ''.
-
-    if($foo->error){
-        warn('error: '.$foo->error.":".$foo->errorString);
-    }
-
-=cut
-
-sub errorString{
-    return $_[0]->{errorString};
 }
 
 =head1 ERROR CODES
@@ -1343,7 +1321,7 @@ One of the specified config files is not tracked.
 
 Failed to copy a file for syncing.
 
-=head2 Config Storage
+=head1 Config Storage
 
 Each config is stored under $baseDir.'/'.$configDir and then each config
 is saved under the the configuration directory with the path on the file
@@ -1379,6 +1357,26 @@ of 'svn add --parents %%%file%%%', then the executed command will be
 
 To help integrate with subversion and git, directories matching /^.git$/ and
 /^.svn$/ are ignored.
+
+=head2 Ownership Storage
+
+The path under which the configuration file is stored, under the configuration directory,
+has a '.SysConfigManage/UID/' and '.SysConfigManage/GID/' directory. Each directory
+contains a corresponding file that mirrors the name of the file in question.
+
+Each file contains either the numeric GID or UID of the file in question.
+
+=head2 Permission Storage
+
+The path under which the configuration file is stored, under the configuration directory,
+has a '.SysConfigManage/Perms/'. The directory contains a corresponding file that mirrors
+the name of the file in question.
+
+Each file contains either the numeric mode of the file in question.
+
+The regexp below is used for verification.
+
+    /^[01246][01234567][01234567][01234567]$/
 
 =head1 AUTHOR
 

@@ -1,8 +1,24 @@
 Revision history for Sys-Config-Manage
 
-0.0.1	2011-08-04/14:20
-		-Correct various issues with listing tracked files.
-		-Minor POD changes.
+0.1.0	 2011-08-13/09:20
+		 -Add the scripts below.
+		 	  bin/scm-perms-get
+			  bin/scm-perms-up
+			  bin/scm-perms-down
+			  bin/scm-perms-list
+			  bin/scm-own-down
+			  bin/scm-own-get
+			  bin/scm-own-list
+			  bin/scm-own-up
+		 -POD updates.
+		 -Misc cleanups.
+		 -Add the modules below.
+		 	  Sys::Config::Manage::Perms
+			  Sys::Config::Manage::Ownership
 
-0.0.0	2011-07-31/09:30
-		-Initial release.
+0.0.1	 2011-08-04/14:20
+		 -Correct various issues with listing tracked files.
+		 -Minor POD changes.
+
+0.0.0	 2011-07-31/09:30
+		 -Initial release.
