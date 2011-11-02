@@ -1,5 +1,22 @@
 Revision history for Sys-Config-Manage
 
+0.2.0	 2011-11-02/13:30
+		 -Fix some boolean login in regards to
+		 	  the error checking in "Sys::Config::Manage".
+		 -Add the modules below.
+		 	  Sys::Config::Manage::Remove
+			  Sys::Config::Manage::Scripts
+		 -Add the scripts below.
+		 	  bin/scm-scripts-list
+			  bin/scm-scripts-run
+			  bin/scm-own-down
+			  bin/scm-own-get
+			  bin/scm-own-list
+			  bin/scm-own-up
+			  bin/scm-getcd
+			  bin/scm-missing
+
+
 0.1.1	 2011-08-13/11:30
 		 -Convert the hostname to lowercase.
 		 -Add 'Error::Helper' to the required module list.

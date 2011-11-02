@@ -17,11 +17,11 @@ Sys::Config::Manage - Manages system configuration information.
 
 =head1 VERSION
 
-Version 0.1.1
+Version 0.2.0
 
 =cut
 
-our $VERSION = '0.1.1';
+our $VERSION = '0.2.0';
 
 =head1 SYNOPSIS
 
@@ -506,11 +506,11 @@ sub getAddCommand{
 	my $method='getAddCommand';
 
 	#blank any previous errors
-	if ($self->errorblank) {
+	if (! $self->errorblank) {
 		return undef;
 	}
 
-	return $self->{addSelection};
+	return $self->{addCommand};
 }
 
 =head2 getAutoCreateConfigDir
@@ -529,7 +529,7 @@ sub getAutoCreateConfigDir{
 	my $method='autoCreateConfigDir';
 
 	#blank any previous errors
-	if ($self->errorblank) {
+	if (! $self->errorblank) {
 		return undef;
 	}
 
@@ -552,7 +552,7 @@ sub getBaseDir{
 	my $method='getBaseDir';	
 
 	#blank any previous errors
-	if ($self->errorblank) {
+	if (!$self->errorblank) {
 		return undef;
 	}
 
@@ -576,7 +576,7 @@ sub getHostnameFallback{
 	my $method='getHostnameFallback';
 
     #blank any previous errors
-    if ($self->errorblank) {
+    if (!$self->errorblank) {
         return undef;
     }
 
