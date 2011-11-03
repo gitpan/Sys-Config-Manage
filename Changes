@@ -1,5 +1,8 @@
 Revision history for Sys-Config-Manage
 
+0.2.1	 2011-11-03/05:20
+		 -Add a missing dependency.
+
 0.2.0	 2011-11-02/13:30
 		 -Fix some boolean login in regards to
 		 	  the error checking in "Sys::Config::Manage".
