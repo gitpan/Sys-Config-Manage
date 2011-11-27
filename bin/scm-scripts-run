@@ -32,7 +32,7 @@ $Getopt::Std::STANDARD_HELP_VERSION = 1;
 
 #version function
 sub main::VERSION_MESSAGE {
-        print "scm-scripts-run 0.0.0\n";
+        print "scm-scripts-run 0.0.1\n";
 }
 
 #print help
@@ -56,7 +56,7 @@ sub main::HELP_MESSAGE {
 my %opts=();
 getopts('b:c:', \%opts);
 
-if(defined( $ARGV[0] )){
+if(!defined( $ARGV[0] )){
 	warn('scm-scripts-run: No script specified');
 	exit 253;
 }

@@ -5,6 +5,7 @@ use strict;
 use File::Basename;
 use base 'Error::Helper';
 use String::ShellQuote;
+use Term::CallEditor qw/solicit/;
 
 =head1 NAME
 
@@ -12,11 +13,11 @@ Sys::Config::Manage::Scripts - Allows scripts to be stored specifically for a co
 
 =head1 VERSION
 
-Version 0.0.0
+Version 0.1.0
 
 =cut
 
-our $VERSION = '0.0.0';
+our $VERSION = '0.1.0';
 
 
 =head1 SYNOPSIS
@@ -73,6 +74,201 @@ sub new{
 	$self->{scm}=$args{scm};
 
 	return $self;
+}
+
+=head2 editScript
+
+=cut
+
+sub editScript{
+	my $self=$_[0];
+    my $configDir=$_[1];
+	my $script=$_[2];
+
+    if( ! $self->errorblank ){
+        return undef;
+	}
+
+	#make sure a script is specified
+	if(!defined($script)){
+		$self->{error}=7;
+		$self->{errorString}='No script specified';
+		$self->warn;
+		return undef;
+	}
+
+	#make sure that it does not contain a forward slash
+	if ( $script =~ /\// ){
+		$self->{error}=10;
+		$self->{errorString}='The script name,"'.$script.'", contains a forward slash.';
+		$self->warn;
+		return undef;
+	}
+
+	#make sure we have a directory to use
+	if (!defined($configDir)) {
+		$configDir=$self->{scm}->selectConfigDir;
+		if ($self->{scm}->error) {
+			$self->{error}=3;
+			$self->{errorString}='Sys::Config::Manage->selectConfigDir errored error="'.
+				$self->{scm}->error.'" errorString="'.$self->{scm}->errorString.'"';
+			$self->warn;
+			return undef;
+		}
+	}
+	
+	#make sure the config directory is valid
+	my $valid=$self->{scm}->validConfigDirName($configDir);
+	if ($self->{scm}->error) {
+		$self->{error}=3;
+		$self->{errorString}='Sys::Config::Manage->validConfigDirName errored error="'.
+			$self->{scm}->error.'" errorString="'.$self->{scm}->errorString.'"';
+		$self->warn;
+		return undef;
+	}
+	if (defined( $valid )) {
+		$self->{error}=4;
+		$self->{errorString}='The configuration directory name '.$valid;
+		$self->warn;
+		return undef;
+	}
+	
+	#makes sure it exists
+	if ( ! -d $self->{scm}->{baseDir}.'/'.$configDir ) {
+		$self->{error}=5;
+		$self->{errorString}='The configuration directory, "'.$self->{baseDir}.'/'.$configDir.'", does not exist';
+		$self->warn;
+		return undef;
+	}
+
+	my $scriptFile=$self->{scm}->{baseDir}.'/'.$configDir.'/.SysConfigManage/Scripts/'.$script;
+
+	#error if it does not exist
+	my $data='';
+	if(  -f $scriptFile ){
+		my $fh;
+		if ( ! open( $fh, '<', $scriptFile ) ){
+			$self->{error}=11;
+			$self->{errorString}='Failed to open "'.$scriptFile.'" for reading';
+			$self->warn;
+			return undef;
+		}
+		$data=join('', <$fh>);
+		close $fh;
+	}
+
+	my $fh=solicit($data);
+	$data=join( '', <$fh> );
+	close( $fh );
+
+	$self->writeScript( $configDir, $script, $data );
+	if ( $self->error ){
+		$self->warnString('Failed to write the script out');
+		return undef;
+	}
+
+	return 1;
+}
+
+=head2 getScript
+
+This returns the contents of the specified script.
+
+Two arguments are taken. The first and optional one is the
+configuration directory, which if not specified it will be
+automatically choosen. The second and required is the
+script name.
+
+    my $data=$foo->getScript( $configDir, $script );
+    if($foo->error){
+        warn('error:'.$foo->error.': '.$foo->errorString);
+    }
+
+=cut
+
+sub getScript{
+	my $self=$_[0];
+    my $configDir=$_[1];
+	my $script=$_[2];
+
+    if( ! $self->errorblank ){
+        return undef;
+	}
+
+	#make sure a script is specified
+	if(!defined($script)){
+		$self->{error}=7;
+		$self->{errorString}='No script specified';
+		$self->warn;
+		return undef;
+	}
+
+	#make sure that it does not contain a forward slash
+	if ( $script =~ /\// ){
+		$self->{error}=10;
+		$self->{errorString}='The script name,"'.$script.'", contains a forward slash.';
+		$self->warn;
+		return undef;
+	}
+
+	#make sure we have a directory to use
+	if (!defined($configDir)) {
+		$configDir=$self->{scm}->selectConfigDir;
+		if ($self->{scm}->error) {
+			$self->{error}=3;
+			$self->{errorString}='Sys::Config::Manage->selectConfigDir errored error="'.
+				$self->{scm}->error.'" errorString="'.$self->{scm}->errorString.'"';
+			$self->warn;
+			return undef;
+		}
+	}
+	
+	#make sure the config directory is valid
+	my $valid=$self->{scm}->validConfigDirName($configDir);
+	if ($self->{scm}->error) {
+		$self->{error}=3;
+		$self->{errorString}='Sys::Config::Manage->validConfigDirName errored error="'.
+			$self->{scm}->error.'" errorString="'.$self->{scm}->errorString.'"';
+		$self->warn;
+		return undef;
+	}
+	if (defined( $valid )) {
+		$self->{error}=4;
+		$self->{errorString}='The configuration directory name '.$valid;
+		$self->warn;
+		return undef;
+	}
+	
+	#makes sure it exists
+	if ( ! -d $self->{scm}->{baseDir}.'/'.$configDir ) {
+		$self->{error}=5;
+		$self->{errorString}='The configuration directory, "'.$self->{baseDir}.'/'.$configDir.'", does not exist';
+		$self->warn;
+		return undef;
+	}
+
+	my $scriptFile=$self->{scm}->{baseDir}.'/'.$configDir.'/.SysConfigManage/Scripts/'.$script;
+
+	#error if it does not exist
+	if( ! -f $scriptFile ){
+		$self->{error}=12;
+		$self->{errorString}='The script, "'.$script.'"("'.$scriptFile.'"), does not exist';
+		$self->warn;
+		return undef;
+	}
+
+	#open it for reading
+	my $fh;
+	if ( ! open( $fh, '<', $scriptFile ) ){
+		$self->{error}=11;
+		$self->{errorString}='Failed to open "'.$scriptFile.'" for reading';
+		$self->warn;
+		return undef;
+	}
+	my $data=join('', <$fh>);
+	close $fh;
+
+	return $data;
 }
 
 =head2 listScripts

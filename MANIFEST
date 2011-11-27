@@ -27,6 +27,8 @@ bin/scm-remove-add
 bin/scm-remove-clean
 bin/scm-remove-list
 bin/scm-remove-remove
+bin/scm-scripts-add
+bin/scm-scripts-edit
 bin/scm-scripts-list
 bin/scm-scripts-run
 bin/scm-own-down

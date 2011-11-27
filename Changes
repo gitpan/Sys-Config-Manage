@@ -1,5 +1,16 @@
 Revision history for Sys-Config-Manage
 
+0.3.0	 2011-11-26/18:00
+		 -Make scripts editable and addable via cli.
+		 -Minor bug and documentation fixes.
+		 -Add the scripts below.
+		 	  bin/scm-scripts-add
+		 	  bin/scm-scripts-edit
+		
+
+0.2.2	 2011-11-20/2:50
+		 -Minor correction to "bin/scm-missing".
+
 0.2.1	 2011-11-03/05:20
 		 -Add a missing dependency.
 

@@ -17,11 +17,11 @@ Sys::Config::Manage - Manages system configuration information.
 
 =head1 VERSION
 
-Version 0.2.1
+Version 0.3.0
 
 =cut
 
-our $VERSION = '0.2.1';
+our $VERSION = '0.3.0';
 
 =head1 SYNOPSIS
 

@@ -25,38 +25,54 @@
 use strict;
 use warnings;
 use Sys::Config::Manage;
+use Sys::Config::Manage::Scripts;
 use Getopt::Std;
 
 $Getopt::Std::STANDARD_HELP_VERSION = 1;
 
 #version function
 sub main::VERSION_MESSAGE {
-        print "scm-missing 0.0.1\n";
+        print "scm-scripts-edit 0.0.0\n";
 }
 
 #print help
 sub main::HELP_MESSAGE {
         print "\n".
-		      "Switches...\n".
+			  "Switches...\n".
 			  "-c <config directory>\n".
 			  "-b <base directory>\n".
 			  "\n".
 			  "Enviromental Variables...\n".
+			  "SysConfigManage_addCommand - The add command to use.\n".
 			  "SysConfigManage_baseDir - The base directory.\n".
 			  "SysConfigManage_selectionMethod - Selection method.\n".
+			  "SysConfigManage_autoCreateConfigDir - Automatically create a config dir if it does not exist.\n".
 			  "\n".
 			  "\n".
 			  "Default...\n".
+			  "SysConfigManage_addCommand - undef\n".
 			  "SysConfigManage_baseDir - undef\n".
-			  "SysConfigManage_selectionMethod - hostname\n";
+			  "SysConfigManage_selectionMethod - hostname\n".
+			  "SysConfigManage_autoCreateConfigDir - 0\n";
 }
 
 #gets the options
 my %opts=();
 getopts('b:c:', \%opts);
 
+if(!defined( $ARGV[0] )){
+	warn('scm-scripts-edit: No script specified');
+	exit 253;
+}
+
 #real in the settings
 my %args;
+if (defined( $ENV{'SysConfigManage_autoCreateConfigDir'} )) {
+	$args{'autoCreateConfigDir'}=$ENV{'SysConfigManage_autoCreateConfigDir'};
+}
+if (defined( $ENV{'SysConfigManage_addCommand'} )) {
+	$args{'addCommand'}=$ENV{'SysConfigManage_addCommand'};
+}
 if (defined( $ENV{'SysConfigManage_baseDir'} )) {
 	$args{'baseDir'}=$ENV{'SysConfigManage_baseDir'};
 }
@@ -72,36 +88,28 @@ if (defined( $opts{b} )) {
 #initializes it
 my $scm=Sys::Config::Manage->new(\%args);
 if ( $scm->error ) {
-	warn('scm-list: Failed to initiate the module');
-	exit $scm->error;
+	warn('scm-scripts-edit: Failed to initiate the module');
+	exit 254;
 }
 
-my @files=$scm->listConfigFiles( $opts{c} );
+#gets the perms opts
+my %oargs;
+$oargs{scm}=$scm;
 
-if ($scm->error) {
-	warn('scm-missing: listConfigFiles failed');
-	exit $scm->error;
-}
+my $scms=Sys::Config::Manage::Scripts->new( \%oargs );
 
-my $int=0;
-while ( defined( $files[$int] ) ){
-	if ( ! -f $files[$int] ){
-		print $files[$int]."\n";
-	}
-
-	$int++;
-}
+$scms->editScript( $opts{c}, $ARGV[0] );
 
 #if we get here, it has worked
 exit 0;
 
 =head1 NAME
 
-scm-missing - Lists the files that exist in under the configuration directory, but not the file system.
+scm-scripts-edit - Edits the specified script.
 
 =head1 SYNOPSIS
 
-scm-missing [B<-b> <base directory>] [B<-c> <configuration directory]
+scm-scripts-run [B<-b> <base directory>] [B<-c> <configuration directory] <script>
 
 =head1 SWITCHES
 
@@ -131,11 +139,15 @@ If not specified, the default will be used.
 
 =head1 EXIT CODES
 
-Any error codes not specified below are Sys::Config::Manage error codes.
+Any error codes not specified below are Sys::Config::Manage::Ownership error codes.
 
 =head2 254
 
 Something script specific.
+
+=head2 253
+
+No scripts specified.
 
 =head1 AUTHOR
 
@@ -165,7 +177,6 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 =head1 README
 
-scm-missing - Lists the files that exist in under the configuration directory, but not the file system.
+scm-scripts-edit - Edits the specified script.
 
 =cut
-
