@@ -11,15 +11,15 @@ use String::ShellQuote;
 
 =head1 NAME
 
-Sys::Config::Manage::Removes - Removes no longer desired files and/or directories.
+Sys::Config::Manage::Remove - Removes no longer desired files and/or directories.
 
 =head1 VERSION
 
-Version 0.0.0
+Version 0.0.1
 
 =cut
 
-our $VERSION = '0.0.0';
+our $VERSION = '0.0.1';
 
 
 =head1 SYNOPSIS
